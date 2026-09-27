@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Токены AI: что это и сколько они стоят</title>
+<style>
+  :root {
+    --ctp-base:     #eff1f5;
+    --ctp-mantle:   #e6e9ef;
+    --ctp-crust:    #dce0e8;
+    --ctp-surface0: #ccd0da;
+    --ctp-surface1: #bcc0cc;
+
+    --grid:     rgba(30,102,245,.06);
+    --grid-big: rgba(30,102,245,.11);
+
+    --c-bg:        var(--ctp-crust);
+    --c-panel:     var(--ctp-base);
+    --c-card:      var(--ctp-mantle);
+    --c-border:    var(--ctp-surface0);
+    --c-fg:        #4c4f69;
+    --c-muted:     #6c6f85;
+    --c-blue:      #1e66f5;
+    --c-green:     #40a02b;
+    --c-orange:    #fe640b;
+    --c-red:       #d20f39;
+    --c-on-accent: #eff1f5;
+    --radius:      14px;
+    --mono:        "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+    --sans:        "Rubik", system-ui, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: var(--sans); margin: 0; padding: 24px;
+    background-color: var(--ctp-mantle);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(var(--grid-big) 1.5px, transparent 1.5px),
+      linear-gradient(90deg, var(--grid-big) 1.5px, transparent 1.5px),
+      radial-gradient(1200px 600px at 70% -10%, var(--ctp-mantle) 0%, var(--c-bg) 55%);
+    background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px, cover;
+    color: var(--c-fg); min-height: 100vh; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { text-align: center; color: var(--c-blue); font-weight: 600; }
+  .card { background: var(--c-card); border: 1px solid var(--c-border);
+    border-radius: var(--radius); padding: 20px; margin: 0 auto 20px; }
+  .card h2 { margin-top: 0; font-size: 1.05rem; color: var(--c-blue); }
+  .card p { line-height: 1.55; }
+  .muted { color: var(--c-muted); font-size: .85rem; }
+
+  .langs { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
+  .lang-btn { font-family: var(--sans); font-size: .85rem; padding: 6px 12px;
+    border-radius: 999px; border: 1px solid var(--c-border); background: var(--c-panel);
+    color: var(--c-fg); cursor: pointer; }
+  .lang-btn:hover { border-color: var(--c-blue); color: var(--c-blue); }
+
+  textarea { width: 100%; min-height: 90px; font-family: var(--mono); font-size: .95rem;
+    padding: 12px; border-radius: 10px; border: 2px solid var(--c-border); background: var(--c-panel);
+    color: var(--c-fg); resize: vertical; }
+  textarea:focus { outline: none; border-color: var(--c-blue); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px; margin: 16px 0; }
+  .stat { background: var(--c-panel); border: 1px solid var(--c-border); border-radius: 10px;
+    padding: 10px 14px; text-align: center; }
+  .stat__num { font-family: var(--mono); font-size: 1.4rem; font-weight: bold; color: var(--c-blue); }
+  .stat__label { font-size: .78rem; color: var(--c-muted); margin-top: 2px; }
+
+  .tokens { display: flex; flex-wrap: wrap; gap: 4px; font-family: var(--mono); font-size: .95rem;
+    line-height: 1.9; margin-top: 8px; }
+  .tok { padding: 2px 6px; border-radius: 5px; color: var(--c-on-accent); white-space: pre; }
+  .tok--0 { background: var(--c-blue); }
+  .tok--1 { background: var(--c-green); }
+  .tok--2 { background: var(--c-orange); }
+  .tok--3 { background: var(--c-red); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .9rem; }
+  th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--c-border); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--c-muted); font-weight: 600; font-size: .8rem; }
+  td.model { font-weight: 600; color: var(--c-fg); }
+  td.cost { font-family: var(--mono); }
+  .badge { display: inline-block; font-size: .7rem; padding: 1px 7px; border-radius: 999px;
+    margin-left: 6px; font-weight: 600; }
+  .badge--exact { background: rgba(64,160,43,.15); color: var(--c-green); }
+  .badge--approx { background: rgba(254,100,11,.15); color: var(--c-orange); }
+
+  .repeat-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+  .repeat-btn { font-family: var(--mono); font-size: .85rem; padding: 6px 12px; border-radius: 8px;
+    border: 1px solid var(--c-border); background: var(--c-panel); color: var(--c-fg); cursor: pointer; }
+  .repeat-btn.active { border-color: var(--c-blue); color: var(--c-blue); background: rgba(30,102,245,.08); }
+
+  .effort-row { display: flex; align-items: flex-end; gap: 14px; margin: 18px 0 8px; }
+  .effort-item { flex: 1; text-align: center; }
+  .effort-bar { width: 100%; border-radius: 6px 6px 0 0; background: var(--c-blue); }
+  .effort-name { font-family: var(--mono); font-weight: bold; margin-top: 6px; }
+  .effort-desc { font-size: .75rem; color: var(--c-muted); margin-top: 2px; line-height: 1.3; min-height: 2.6em; }
+</style>
+</head>
+<body>
+<div style="max-width:1100px; margin:0 auto 8px;"><a href="../index.html" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:rgba(255,255,255,.92); color:#1e66f5; font:600 14px/1 'Rubik', system-ui, sans-serif; text-decoration:none; border:1px solid #ccd0da; border-radius:999px; box-shadow:0 2px 8px rgba(0,0,0,.12);">← На главную</a></div>
+
+<div class="wrap">
+  <h1>🔤 Токены AI: что это и сколько они стоят</h1>
+
+  <div class="card">
+    <h2>Что такое токен?</h2>
+    <p>ИИ не читает текст буквами и не читает его целыми словами — он режет текст на
+    кусочки, <b>токены</b>, и уже с ними работает. Токен — это не «слово»: иногда одно
+    слово — это один токен, а иногда пять токенов. Компании берут деньги именно за
+    токены, а не за слова или буквы — поэтому один и тот же смысл на разных языках
+    может стоить по-разному.</p>
+    <p class="muted">Ниже — настоящий счётчик токенов OpenAI (кодировка <code>o200k_base</code>,
+    та же, что использует GPT-4o/GPT-4.1), считает прямо в браузере, без интернета.</p>
+  </div>
+
+  <div class="card">
+    <h2>Попробуй сам</h2>
+    <p class="muted">Один и тот же смысл на разных языках — нажми, чтобы подставить:</p>
+    <div class="langs" id="langButtons"></div>
+    <textarea id="input" spellcheck="false"></textarea>
+
+    <div class="stats">
+      <div class="stat"><div class="stat__num" id="statWords">–</div><div class="stat__label">слов*</div></div>
+      <div class="stat"><div class="stat__num" id="statChars">–</div><div class="stat__label">символов</div></div>
+      <div class="stat"><div class="stat__num" id="statBytes">–</div><div class="stat__label">байт (UTF-8)</div></div>
+      <div class="stat"><div class="stat__num" id="statTokens">–</div><div class="stat__label">токенов (точно)</div></div>
+    </div>
+    <p class="muted">*счёт слов по пробелам не работает для языков без пробелов между
+    словами (китайский, японский) — там ориентируйтесь на токены и символы.</p>
+
+    <h2 style="margin-top:20px;">Как текст режется на токены</h2>
+    <div class="tokens" id="tokenView"></div>
+    <p class="muted" style="margin-top:10px;">Пробел в начале токена показан точкой «·» —
+    так видно, что пробел тоже часть токена.</p>
+  </div>
+
+  <div class="card">
+    <h2>Сколько это будет стоить</h2>
+    <p class="muted">Токенайзер OpenAI (o200k_base) в этом файле — настоящий, число для
+    OpenAI посчитано точно. Anthropic и Gemini свои токенайзеры офлайн не публикуют
+    (только платный API) — для них используем то же число токенов как приближение
+    <span class="badge badge--approx">оценка</span>: порядок величины и вывод «не-английский
+    дороже» верны, но точное число может немного отличаться от реального счёта
+    провайдера. Цены сверены по официальным страницам pricing на 27.09.2026.</p>
+    <p class="muted"><b>Как читать таблицу:</b> компании продают токены оптом и указывают
+    цену за <b>1 000 000 токенов</b> (это общепринятая единица, а не цена одного токена —
+    один токен стоит доли цента). Первые две денежные колонки — это тариф провайдера.
+    Последние две — уже посчитанная стоимость именно твоего текста из поля выше:
+    (токенов ÷ 1 000 000) × тариф × число повторов.</p>
+
+    <div class="repeat-row">
+      <span class="muted">Посчитать для:</span>
+      <button class="repeat-btn active" data-n="1">1 раз</button>
+      <button class="repeat-btn" data-n="30">класс — 30 раз</button>
+      <button class="repeat-btn" data-n="1000">1000 раз</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Модель</th><th>Тариф, $ за 1M токенов<br>(вход)</th><th>Тариф, $ за 1M токенов<br>(выход)</th><th>Твой текст как ввод</th><th>Твой текст как ответ ИИ</th></tr>
+      </thead>
+      <tbody id="costTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Бонус: почему одна и та же задача стоит по-разному даже у одной компании</h2>
+    <p>Дело не только в языке. У Anthropic (и у похожих компаний) есть ещё две причины,
+    почему один и тот же вопрос может «съесть» совсем разное число токенов:</p>
+    <p><b>1. Размер модели.</b> Haiku, Sonnet и Opus — это не три вкуса одной и той же
+    модели, а действительно разные «мощности». На сложный вопрос модель посерьёзнее
+    (Opus) может позволить себе развёрнутое внутреннее рассуждение перед ответом — и
+    оно тоже состоит из токенов и тоже оплачивается, даже если в итоговом ответе всего
+    два предложения.</p>
+    <p><b>2. Отдельная «ручка усердия» (effort).</b> У современных моделей Anthropic
+    (например, Sonnet 5 и Opus 5.5) есть параметр запроса <code>effort</code> с
+    уровнями <code>low → medium → high → xhigh → max</code> — он напрямую управляет
+    тем, сколько токенов модель потратит на <b>один и тот же</b> вопрос: на <code>low</code>
+    модель отвечает быстро и коротко, может вообще пропустить обдумывание; на
+    <code>max</code> — думает настолько глубоко, насколько может, даже если это в разы
+    дороже. Это не случайность и не «настроение» модели — это буквально настройка,
+    которую разработчик выставляет в запросе.</p>
+    <div class="effort-row">
+      <div class="effort-item">
+        <div class="effort-bar" style="height:24px; opacity:.35;"></div>
+        <div class="effort-name">low</div>
+        <div class="effort-desc">быстро и дёшево, может пропустить раздумья</div>
+      </div>
+      <div class="effort-item">
+        <div class="effort-bar" style="height:40px; opacity:.5;"></div>
+        <div class="effort-name">medium</div>
+        <div class="effort-desc">баланс скорости и качества</div>
+      </div>
+      <div class="effort-item">
+        <div class="effort-bar" style="height:60px; opacity:.7;"></div>
+        <div class="effort-name">high</div>
+        <div class="effort-desc">по умолчанию почти везде</div>
+      </div>
+      <div class="effort-item">
+        <div class="effort-bar" style="height:84px; opacity:.85;"></div>
+        <div class="effort-name">xhigh</div>
+        <div class="effort-desc">долгие агентские и сложные задачи</div>
+      </div>
+      <div class="effort-item">
+        <div class="effort-bar" style="height:112px; opacity:1;"></div>
+        <div class="effort-name">max</div>
+        <div class="effort-desc">без ограничений на токены</div>
+      </div>
+    </div>
+    <p class="muted">Высота столбиков — иллюстрация принципа «выше уровень → больше
+    токенов», не измеренные цифры (точные числа зависят от конкретного вопроса).
+    Уровень поддерживают не все модели: например, у компактной и быстрой Haiku 4.5
+    такого рычага нет — она и так экономна по умолчанию, это её основная задача.</p>
+    <p class="muted">Источник: официальная документация Anthropic (<code>platform.claude.com/docs</code>,
+    разделы про <code>effort</code> и extended/adaptive thinking), сверено 27.09.2026.</p>
+  </div>
+</div>
+
+<script src="tiktoken-o200k.bundle.js"></script>
+<script>
+const EXAMPLES = {
+  'English':  "The quick brown fox jumps over the lazy dog near the river every single morning before school starts.",
+  'Русский':  "Быстрая рыжая лиса перепрыгивает через ленивую собаку у реки каждое утро перед началом школы.",
+  'Deutsch':  "Der schnelle braune Fuchs springt jeden Morgen vor Schulbeginn über den faulen Hund am Fluss.",
+  'العربية':  "الثعلب البني السريع يقفز فوق الكلب الكسول بجانب النهر كل صباح قبل بدء المدرسة.",
+  'हिन्दी':    "तेज़ भूरी लोमड़ी हर सुबह स्कूल शुरू होने से पहले नदी के पास आलसी कुत्ते के ऊपर कूदती है।",
+  '中文':      "敏捷的棕色狐狸每天早上在学校开始之前都会跳过河边懒惰的狗。",
+  '日本語':    "素早い茶色のキツネは学校が始まる前に毎朝川辺の怠け者の犬を飛び越える。"
+};
+
+const MODELS = [
+  { provider: 'OpenAI',    model: 'GPT-4.1',              exact: true,  priceIn: 2.00, priceOut: 8.00  },
+  { provider: 'OpenAI',    model: 'GPT-4.1 mini',         exact: true,  priceIn: 0.40, priceOut: 1.60  },
+  { provider: 'OpenAI',    model: 'GPT-4o',                exact: true,  priceIn: 2.50, priceOut: 10.00 },
+  { provider: 'Anthropic', model: 'Claude Haiku 4.5',      exact: false, priceIn: 1.00, priceOut: 5.00  },
+  { provider: 'Anthropic', model: 'Claude Sonnet 5',       exact: false, priceIn: 2.00, priceOut: 10.00 },
+  { provider: 'Anthropic', model: 'Claude Opus 5.5',       exact: false, priceIn: 4.00, priceOut: 20.00 },
+  { provider: 'Google',    model: 'Gemini 3.1 Flash-Lite', exact: false, priceIn: 0.25, priceOut: 1.50  },
+  { provider: 'Google',    model: 'Gemini 3.5 Flash',      exact: false, priceIn: 1.50, priceOut: 9.00  },
+  { provider: 'Google',    model: 'Gemini 2.5 Pro',        exact: false, priceIn: 1.25, priceOut: 10.00 }
+];
+
+const input = document.getElementById('input');
+const langButtons = document.getElementById('langButtons');
+let repeatN = 1;
+
+Object.keys(EXAMPLES).forEach((lang, i) => {
+  const b = document.createElement('button');
+  b.className = 'lang-btn';
+  b.textContent = lang;
+  b.addEventListener('click', () => { input.value = EXAMPLES[lang]; update(); });
+  langButtons.appendChild(b);
+  if (i === 0) input.value = EXAMPLES[lang];
+});
+
+document.querySelectorAll('.repeat-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.repeat-btn').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    repeatN = Number(btn.dataset.n);
+    renderCostTable(currentTokens);
+  });
+});
+
+function fmtCost(usd) {
+  if (usd === 0) return '$0';
+  if (usd < 0.01) return '$' + usd.toFixed(6);
+  if (usd < 1) return '$' + usd.toFixed(4);
+  return '$' + usd.toFixed(2);
+}
+
+let currentTokens = 0;
+
+function renderCostTable(tokens) {
+  currentTokens = tokens;
+  const body = document.getElementById('costTable');
+  body.innerHTML = '';
+  MODELS.forEach((m) => {
+    const costIn = (tokens / 1e6) * m.priceIn * repeatN;
+    const costOut = (tokens / 1e6) * m.priceOut * repeatN;
+    const tr = document.createElement('tr');
+    const badge = m.exact
+      ? '<span class="badge badge--exact">точно</span>'
+      : '<span class="badge badge--approx">оценка</span>';
+    tr.innerHTML =
+      '<td class="model">' + m.provider + ' — ' + m.model + badge + '</td>' +
+      '<td>' + m.priceIn.toFixed(2) + '</td>' +
+      '<td>' + m.priceOut.toFixed(2) + '</td>' +
+      '<td class="cost">' + fmtCost(costIn) + '</td>' +
+      '<td class="cost">' + fmtCost(costOut) + '</td>';
+    body.appendChild(tr);
+  });
+}
+
+function update() {
+  const text = input.value;
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const chars = Array.from(text).length;
+  const bytes = new TextEncoder().encode(text).length;
+  const tokens = window.OpenAITokenizer.countTokens(text);
+
+  document.getElementById('statWords').textContent = words;
+  document.getElementById('statChars').textContent = chars;
+  document.getElementById('statBytes').textContent = bytes;
+  document.getElementById('statTokens').textContent = tokens;
+
+  const tokenView = document.getElementById('tokenView');
+  tokenView.innerHTML = '';
+  const pieces = window.OpenAITokenizer.splitTokens(text);
+  pieces.forEach((piece, i) => {
+    const span = document.createElement('span');
+    span.className = 'tok tok--' + (i % 4);
+    span.textContent = piece.replace(/^ /, '·');
+    tokenView.appendChild(span);
+  });
+
+  renderCostTable(tokens);
+}
+
+let debounceId;
+input.addEventListener('input', () => {
+  clearTimeout(debounceId);
+  debounceId = setTimeout(update, 150);
+});
+
+update();
+</script>
+</body>
+</html>
