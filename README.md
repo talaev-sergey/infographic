@@ -1,5 +1,7 @@
 # Инфографики
 
+[![Открыть сайт](https://img.shields.io/badge/сайт-talaev--sergey.github.io%2Finfographic-1e66f5?style=for-the-badge)](https://talaev-sergey.github.io/infographic/)
+
 Интерактивные HTML-инфографики для уроков.
 
 ## Список
