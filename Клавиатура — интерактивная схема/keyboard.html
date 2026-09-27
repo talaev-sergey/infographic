@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Компьютерная грамотность: клавиатура — интерактивная схема (урок 3)</title>
+<style>
+  :root {
+    --ink:      #2f62c4;   /* синий контур/текст (блюпринт) */
+    --ink-soft: #7ea1de;   /* тонкий внутренний контур, русская подпись */
+    --key:      #ffffff;   /* клавиша без заливки */
+    --blue:     #ffffff;   /* залитых клавиш нет — оставляем белыми */
+    --blue-dk:  #eaf1ff;
+    --yellow:   #ffffff;   /* жёлтых клавиш нет */
+    --hi:       #ff7a1a;   /* оранжевая подсветка */
+    --hi-soft:  #ffe0c4;
+    --paper:    #e6e9ef;   /* фон-бумага (единый с квизами) */
+    --grid:     rgba(30,102,245,.06);
+    --grid-big: rgba(30,102,245,.11);
+    --sans:     "Rubik", system-ui, "Segoe UI", sans-serif;
+    --u:        clamp(16px, 5.4vw, 56px);   /* размер клавиши */
+    --gap:      2.5px;
+    --pad:      calc(var(--u) * 0.42);        /* поле между клавишами и бортиком */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(var(--grid-big) 1.5px, transparent 1.5px),
+      linear-gradient(90deg, var(--grid-big) 1.5px, transparent 1.5px);
+    background-size:
+      24px 24px, 24px 24px, 120px 120px, 120px 120px;
+    -webkit-font-smoothing: antialiased;
+    padding: 22px 12px 40px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #eef3fc;   /* схема остаётся «на бумаге» и в тёмной теме */
+    }
+  }
+
+  .wrap { max-width: 1260px; margin: 0 auto; }
+
+  .head { text-align: center; margin-bottom: 14px; }
+  .head h1 { margin: 0 0 4px; font-size: clamp(1.1rem, 3.4vw, 1.5rem); font-weight: 600; }
+  .head p  { margin: 0; color: var(--ink-soft); font-size: clamp(.8rem, 2.6vw, .95rem); }
+
+  /* панель кнопок-подсказок */
+  .tools { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin: 0 0 10px; }
+  .tools--combo { margin: 0 0 14px; }
+  .tools__label { font-size: clamp(.78rem, 2.2vw, .9rem); font-weight: 600; color: var(--ink-soft); }
+  .tool {
+    position: relative;
+    appearance: none; cursor: pointer; font-family: var(--sans); font-weight: 500;
+    font-size: clamp(.78rem, 2.4vw, .92rem);
+    border: 1.6px solid var(--ink); background: var(--key); color: var(--ink);
+    padding: 9px 15px; border-radius: 8px; line-height: 1;
+    transition: background .12s, color .12s, box-shadow .12s, transform .07s;
+  }
+  .tool::before {
+    content: ''; position: absolute; inset: 3px;
+    border: 1.2px solid var(--ink-soft); border-radius: 5px;
+    pointer-events: none; opacity: .65;
+  }
+  .tool:hover { background: var(--blue-dk); }
+  .tool:active { transform: translateY(1px); }
+  .tool[aria-pressed="true"] {
+    background: var(--hi); border-color: var(--hi); color: #fff;
+    box-shadow: 0 3px 10px rgba(255,122,26,.35);
+  }
+  .tool[aria-pressed="true"]::before { opacity: 0; }
+  .tool--reset { border-style: dashed; }
+
+  /* подпись-объяснение */
+  .caption {
+    max-width: 680px; margin: 0 auto 16px; height: 66px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    text-align: center; font-size: clamp(.85rem, 2.7vw, 1rem); line-height: 1.35;
+    padding: 8px 16px; border-radius: 12px; overflow: hidden;
+    background: #fff; border: 2px solid var(--ink);
+  }
+  .caption b { color: var(--hi); }
+
+  /* сама клавиатура */
+  .board-scroll { overflow-x: auto; padding-bottom: 6px; }
+  .board {
+    position: relative;
+    width: calc(20.75 * var(--u) + 2 * var(--pad));
+    height: calc(6 * var(--u) + 2 * var(--pad));
+    margin: 0 auto;
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 18px;
+    box-shadow: 5px 6px 0 rgba(47,98,196,.10);
+  }
+  .board::before {
+    content: ''; position: absolute; inset: calc(var(--pad) * 0.5);
+    border: 1.5px solid var(--ink-soft); border-radius: 12px;
+    pointer-events: none;
+  }
+
+  /* блок индикаторов-лампочек (Caps Lock / Num Lock) */
+  .leds {
+    position: absolute;
+    display: flex; flex-direction: column;
+    justify-content: center; gap: calc(var(--u) * .1);
+    pointer-events: none;
+  }
+  .led { display: flex; align-items: center; gap: calc(var(--u) * .14); }
+  .led__dot {
+    width: calc(var(--u) * .2); height: calc(var(--u) * .2);
+    border-radius: 50%;
+    background: #cdd7e6;
+    border: 1px solid var(--ink-soft);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.18);
+    transition: background .15s, box-shadow .15s, border-color .15s;
+  }
+  .led.on .led__dot {
+    background: #35d94a;
+    border-color: #23962f;
+    box-shadow: 0 0 7px 1px rgba(53,217,74,.75), inset 0 0 3px rgba(255,255,255,.6);
+  }
+  .led__lbl {
+    font-size: calc(var(--u) * .17); line-height: 1;
+    color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em;
+  }
+
+  .key {
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--key);
+    border: 1.6px solid var(--ink);
+    border-radius: 8px;
+    color: var(--ink);
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    padding: 0;
+    transition: transform .07s, background .12s, box-shadow .12s;
+  }
+  .key::before {
+    content: ''; position: absolute; inset: 3px;
+    border: 1.2px solid var(--ink-soft); border-radius: 5px;
+    pointer-events: none; opacity: .65;
+  }
+  .key:hover { background: var(--blue-dk); }
+  .key:active { transform: translateY(1px); }
+  .key.blue:hover, .key.yellow:hover { background: var(--blue-dk); }
+
+  /* подписи внутри клавиши */
+  .key .lbl  { font-size: calc(var(--u) * .34); line-height: 1; }
+  .key.sm .lbl { font-size: calc(var(--u) * .24); }
+  .key .en   { position: absolute; top: 12%; left: 16%; font-size: calc(var(--u) * .34); }
+  .key .ru   { position: absolute; bottom: 10%; right: 14%; font-size: calc(var(--u) * .26); color: var(--ink-soft); }
+  .key .tl   { position: absolute; top: 10%; left: 16%; font-size: calc(var(--u) * .22); color: var(--ink-soft); }
+  .key .big  { font-size: calc(var(--u) * .42); }
+  /* спец.символы — оранжевые только при выбранной кнопке «Спец.символы» */
+  .board.show-special .key .tl,
+  .board.show-special .key.spec .lbl { color: var(--hi); font-weight: 700; }
+
+  /* подсветка: мягкое «дыхание» + бегущий блик, волной по группе */
+  .key.hi {
+    background: var(--hi) !important; color: #fff !important;
+    border-color: var(--hi); z-index: 3; overflow: hidden;
+    animation: hiGlow 1.6s ease-in-out infinite;
+    animation-delay: var(--d, 0s);
+  }
+  .key.hi::before { opacity: 0; }
+  .key.hi::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.55) 50%, transparent 62%);
+    transform: translateX(-130%);
+    animation: hiShine 1.6s ease-in-out infinite;
+    animation-delay: var(--d, 0s);
+  }
+  .key.hi .lbl { color: #fff; }
+  .key.hi .ru, .key.hi .tl { color: #ffe9d6; }
+  @keyframes hiGlow {
+    0%,100% { box-shadow: 0 3px 9px rgba(255,122,26,.25);  filter: brightness(1);    }
+    50%     { box-shadow: 0 6px 18px rgba(255,122,26,.50); filter: brightness(1.09); }
+  }
+  @keyframes hiShine {
+    0%       { transform: translateX(-130%); }
+    55%,100% { transform: translateX(130%);  }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .key.hi { animation: none; box-shadow: 0 3px 10px rgba(255,122,26,.35); }
+    .key.hi::after { display: none; }
+  }
+
+  ::-webkit-scrollbar { height: 9px; }
+  ::-webkit-scrollbar-thumb { background: var(--blue-dk); border-radius: 6px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="head">
+      <h1>Клавиатура — 100% (Полноразмерная)</h1>
+      <p>Классическая клавиатура со 104–108 кнопками.</p>
+    </header>
+
+    <div class="tools" id="tools">
+      <button class="tool" data-g="letter">Буквы</button>
+      <button class="tool" data-g="digit">Цифры</button>
+      <button class="tool" data-g="space">Пробел</button>
+      <button class="tool" data-g="backspace">Backspace</button>
+      <button class="tool" data-g="enter">Enter</button>
+      <button class="tool" data-g="shift">Shift</button>
+      <button class="tool" data-g="lang">Смена языка</button>
+      <button class="tool" data-g="special">Спец.символы</button>
+      <button class="tool tool--reset" data-g="reset">Сбросить</button>
+    </div>
+
+    <div class="tools tools--combo" id="combos">
+      <span class="tools__label">Полезные комбинации:</span>
+      <button class="tool" data-combo="copy">Копировать</button>
+      <button class="tool" data-combo="paste">Вставить</button>
+      <button class="tool" data-combo="cut">Вырезать</button>
+      <button class="tool" data-combo="undo">Отменить</button>
+      <button class="tool" data-combo="all">Выделить всё</button>
+      <button class="tool" data-combo="save">Сохранить</button>
+    </div>
+
+    <div class="caption" id="caption">Нажми на клавишу мышкой или на настоящей клавиатуре — расскажу, что она делает.</div>
+
+    <div class="board-scroll">
+      <div class="board" id="board"></div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const U = 1; // единицы; реальный размер берётся из --u
+  const board = document.getElementById('board');
+
+  // группы для подсветки/объяснений
+  const GROUP = {
+    space:     { name: 'Пробел',    desc: 'Самая длинная клавиша. Вставляет пробел между словами.' },
+    lang:      { name: 'Смена языка', desc: 'Shift + Alt или Win + Пробел переключают раскладку (язык).' },
+    special:   { name: 'Спец.символы', desc: 'Знаки препинания и символы. Верхний символ печатается с Shift.' },
+    backspace: { name: 'Backspace', desc: 'Удаляет символ слева от курсора.' },
+    enter:     { name: 'Enter',     desc: 'Переход на новую строку или подтверждение ввода.' },
+    shift:     { name: 'Shift',     desc: 'Клавиша + Shift даёт заглавную букву или верхний символ клавиши.' },
+    letter:    { name: 'Буквы',     desc: 'Русская раскладка — русские буквы, английская — латинские. Без Shift строчные, + Shift — заглавные.' },
+    digit:     { name: 'Цифры',     desc: 'Цифры в верхнем ряду и на нампаде справа. В верхнем ряду + Shift даёт символ над цифрой.' },
+  };
+
+  // ——— описание раскладки. x,y,w,h в единицах клавиш ———
+  const keys = [];
+  const K = (o) => keys.push(o);
+
+  // helpers
+  const letter = (x, y, en, ru) => K({ x, y, en, ru, g: 'letter',
+        name: en + ' / ' + ru,
+        desc: '+ Shift — заглавные «' + ru + '» / «' + en + '».' });
+  const digit = (x, tl, d, ru) => {
+    const shift = (ru && ru !== tl) ? '«' + tl + '» (англ.) или «' + ru + '» (рус.)' : '«' + tl + '»';
+    K({ x, y: 1, tl, big: d, g: 'digit', name: 'Цифра ' + d,
+        desc: '+ Shift — символ ' + shift + '.' });
+  };
+
+  // Row 0 — функциональный ряд
+  K({ x:0, y:0, lbl:'Esc', cls:'yellow', sm:1, name:'Esc', desc:'Отменяет действие или закрывает подсказку, окно.' });
+  ['F1','F2','F3','F4'].forEach((f,i)=>K({x:1+i,y:0,lbl:f,sm:1,name:f,desc:'Функциональная клавиша '+f+'.'}));
+  ['F5','F6','F7','F8'].forEach((f,i)=>K({x:5+i,y:0,lbl:f,cls:'blue',sm:1,name:f,desc:'Функциональная клавиша '+f+'.'}));
+  ['F9','F10','F11','F12'].forEach((f,i)=>K({x:9+i,y:0,lbl:f,sm:1,name:f,desc:'Функциональная клавиша '+f+'.'}));
+  K({ x:13,y:0,lbl:'PrtSc',sm:1,name:'PrtSc',desc:'PrtSc — делает снимок экрана.' });
+  K({ x:14,y:0,lbl:'Del',sm:1,name:'Delete',desc:'Удаляет символ справа от курсора.' });
+  // nav сверху
+  K({ x:16.75,y:0,lbl:'Home',cls:'blue',sm:1,name:'Home',desc:'Home переносит курсор в начало строки.' });
+  K({ x:17.75,y:0,lbl:'End',sm:1,name:'End',desc:'End переносит курсор в конец строки.' });
+  K({ x:18.75,y:0,lbl:'PgUp',cls:'blue',sm:1,name:'PgUp',desc:'PgUp прокручивает страницу вверх.' });
+  K({ x:19.75,y:0,lbl:'PgDn',cls:'blue',sm:1,name:'PgDn',desc:'PgDn прокручивает страницу вниз.' });
+
+  // Row 1 — цифровой ряд
+  K({ x:0,y:1,lbl:'Ё',tl:'~',name:'Ё / `',desc:'+ Shift — символ «~» (тильда, англ.) или буква «Ё» (рус.).' });
+  digit(1,'!','1','!'); digit(2,'@','2','"'); digit(3,'#','3','№'); digit(4,'$','4',';'); digit(5,'%','5','%');
+  digit(6,'^','6',':'); digit(7,'&','7','?'); digit(8,'*','8','*'); digit(9,'(','9','('); digit(10,')','0',')');
+  K({ g:'special', x:11,y:1,lbl:'-',tl:'_',name:'Дефис',desc:'Клавиша дефиса и подчёркивания.' });
+  K({ g:'special', x:12,y:1,lbl:'=',tl:'+',name:'Равно',desc:'Клавиша «равно» и «плюс».' });
+  K({ x:13,y:1,w:2,lbl:'←',cls:'blue',g:'backspace',name:'Backspace',desc:GROUP.backspace.desc });
+
+  // Row 1 numpad
+  K({ x:16.75,y:1,lbl:'Num',cls:'blue',sm:1,name:'Num Lock',desc:'Num Lock включает цифры на правом блоке.' });
+  K({ g:'special', x:17.75,y:1,lbl:'/',name:'Деление',desc:'Клавиша деления на правом блоке.' });
+  K({ g:'special', x:18.75,y:1,lbl:'*',cls:'blue',name:'Умножение',desc:'Клавиша умножения на правом блоке.' });
+  K({ g:'special', x:19.75,y:1,lbl:'−',cls:'blue',name:'Минус',desc:'Клавиша минус на правом блоке.' });
+
+  // Row 2 — QWERTY / ЙЦУКЕН
+  K({ x:0,y:2,w:1.5,lbl:'Tab',cls:'blue',name:'Tab',desc:'Tab делает большой отступ вправо.' });
+  const r2 = [['Q','Й'],['W','Ц'],['E','У'],['R','К'],['T','Е'],['Y','Н'],['U','Г'],['I','Ш'],['O','Щ'],['P','З']];
+  r2.forEach((p,i)=>letter(1.5+i,2,p[0],p[1]));
+  K({ g:'special', x:11.5,y:2,lbl:'[',ru:'х',name:'Скобка [',desc:'Клавиша со скобкой [ и буквой Х.' });
+  K({ g:'special', x:12.5,y:2,lbl:']',ru:'ъ',name:'Скобка ]',desc:'Клавиша со скобкой ] и буквой Ъ.' });
+  K({ g:'special', x:13.5,y:2,w:1.5,lbl:'\\',name:'Слэш',desc:'Клавиша обратной косой черты.' });
+  // numpad
+  K({ x:16.75,y:2,lbl:'7',g:'digit',name:'Цифра 7',desc:'Цифра 7 на правом блоке.' });
+  K({ x:17.75,y:2,lbl:'8',g:'digit',name:'Цифра 8',desc:'Цифра 8 на правом блоке.' });
+  K({ x:18.75,y:2,lbl:'9',g:'digit',name:'Цифра 9',desc:'Цифра 9 на правом блоке.' });
+  K({ g:'special', x:19.75,y:2,w:1,h:2,lbl:'+',cls:'blue',name:'Плюс',desc:'Клавиша плюс на правом блоке.' });
+
+  // Row 3 — ASDF / ФЫВА
+  K({ x:0,y:3,w:1.75,lbl:'Caps',cls:'blue',name:'Caps Lock',desc:'Caps Lock включает печать только большими буквами.' });
+  const r3 = [['A','Ф'],['S','Ы'],['D','В'],['F','А'],['G','П'],['H','Р'],['J','О'],['K','Л'],['L','Д']];
+  r3.forEach((p,i)=>letter(1.75+i,3,p[0],p[1]));
+  K({ g:'special', x:10.75,y:3,lbl:';',ru:'ж',name:'Точка с запятой',desc:'Клавиша с ; и буквой Ж.' });
+  K({ g:'special', x:11.75,y:3,lbl:"'",ru:'э',name:'Апостроф',desc:'Клавиша с апострофом и буквой Э.' });
+  K({ x:12.75,y:3,w:2.25,lbl:'Enter',cls:'yellow',g:'enter',name:'Enter',desc:GROUP.enter.desc });
+  // numpad
+  K({ x:16.75,y:3,lbl:'4',g:'digit',name:'Цифра 4',desc:'Цифра 4 на правом блоке.' });
+  K({ x:17.75,y:3,lbl:'5',g:'digit',name:'Цифра 5',desc:'Цифра 5 на правом блоке.' });
+  K({ x:18.75,y:3,lbl:'6',g:'digit',name:'Цифра 6',desc:'Цифра 6 на правом блоке.' });
+
+  // Row 4 — ZXCV / ЯЧСМ
+  K({ x:0,y:4,w:2.25,lbl:'Shift',cls:'blue',g:'shift',lang:1,name:'Shift',desc:GROUP.shift.desc });
+  const r4 = [['Z','Я'],['X','Ч'],['C','С'],['V','М'],['B','И'],['N','Т'],['M','Ь']];
+  r4.forEach((p,i)=>letter(2.25+i,4,p[0],p[1]));
+  K({ g:'special', x:9.25,y:4,lbl:',',ru:'б',name:'Запятая',desc:'Клавиша с запятой и буквой Б.' });
+  K({ g:'special', x:10.25,y:4,lbl:'.',ru:'ю',name:'Точка',desc:'Клавиша с точкой и буквой Ю.' });
+  K({ g:'special', x:11.25,y:4,lbl:'/',ru:'.',name:'Слэш',desc:'Клавиша с косой чертой.' });
+  K({ x:12.25,y:4,w:1.25,lbl:'Shift',cls:'blue',g:'shift',lang:1,name:'Shift',desc:GROUP.shift.desc });
+  // стрелка вверх
+  K({ x:14.5,y:4,lbl:'↑',cls:'blue',name:'Стрелка вверх',desc:'Двигает курсор на строку вверх.' });
+  // numpad
+  K({ x:16.75,y:4,lbl:'1',g:'digit',name:'Цифра 1',desc:'Цифра 1 на правом блоке.' });
+  K({ x:17.75,y:4,lbl:'2',g:'digit',name:'Цифра 2',desc:'Цифра 2 на правом блоке.' });
+  K({ x:18.75,y:4,lbl:'3',g:'digit',name:'Цифра 3',desc:'Цифра 3 на правом блоке.' });
+  K({ x:19.75,y:4,w:1,h:2,lbl:'↵',cls:'yellow',g:'enter',name:'Enter',desc:GROUP.enter.desc });
+
+  // Row 5 — нижний ряд
+  K({ x:0,y:5,w:1.25,lbl:'Ctrl',cls:'blue',name:'Ctrl',desc:'Ctrl работает вместе с другими клавишами.' });
+  K({ x:1.25,y:5,w:1.25,lbl:'Win',cls:'blue',lang:1,name:'Win',desc:'Открывает меню «Пуск». Win + Пробел переключает язык.' });
+  K({ x:2.5,y:5,w:1.25,lbl:'Alt',cls:'blue',lang:1,name:'Alt',desc:'Alt + Shift переключает язык (раскладку).' });
+  K({ x:3.75,y:5,w:6.5,lbl:'',cls:'yellow',g:'space',lang:1,name:'Пробел',desc:GROUP.space.desc });
+  K({ x:10.25,y:5,w:1,lbl:'Alt',cls:'blue',lang:1,name:'Alt',desc:'Alt + Shift переключает язык (раскладку).' });
+  K({ x:11.25,y:5,w:1,lbl:'Fn',cls:'blue',name:'Fn',desc:'Fn включает второе действие клавиш.' });
+  K({ x:12.25,y:5,w:1.25,lbl:'Ctrl',cls:'blue',name:'Ctrl',desc:'Ctrl работает вместе с другими клавишами.' });
+  // стрелки ← ↓ →
+  K({ x:13.5,y:5,lbl:'←',cls:'blue',name:'Стрелка влево',desc:'Двигает курсор на одну букву влево.' });
+  K({ x:14.5,y:5,lbl:'↓',cls:'blue',name:'Стрелка вниз',desc:'Двигает курсор на строку вниз.' });
+  K({ x:15.5,y:5,lbl:'→',cls:'blue',name:'Стрелка вправо',desc:'Двигает курсор на одну букву вправо.' });
+  // numpad
+  K({ x:16.75,y:5,w:2,lbl:'0',g:'digit',name:'Цифра 0',desc:'Цифра 0 на правом блоке.' });
+  K({ g:'special', x:18.75,y:5,lbl:'.',name:'Точка',desc:'Точка на правом блоке.' });
+
+  // ——— рендер ———
+  const cap = (n) => `calc(${n} * var(--u) + ${n} * 0px)`;
+  keys.forEach((k, i) => {
+    const w = k.w || 1, h = k.h || 1;
+    const el = document.createElement('button');
+    el.className = 'key' + (k.cls ? ' ' + k.cls : '') + (k.sm ? ' sm' : '') + (k.g === 'special' ? ' spec' : '');
+    el.style.left   = `calc(${k.x} * var(--u) + var(--pad) + var(--gap))`;
+    el.style.top    = `calc(${k.y} * var(--u) + var(--pad) + var(--gap))`;
+    el.style.width  = `calc(${w} * var(--u) - 2 * var(--gap))`;
+    el.style.height = `calc(${h} * var(--u) - 2 * var(--gap))`;
+
+    let inner = '';
+    if (k.en) { inner += `<span class="en">${k.en}</span><span class="ru">${k.ru}</span>`; }
+    else if (k.big) { inner += `<span class="lbl big">${k.big}</span>`; if (k.tl) inner += `<span class="tl">${k.tl}</span>`; }
+    else {
+      if (k.tl) inner += `<span class="tl">${k.tl}</span>`;
+      inner += `<span class="lbl">${k.lbl || ''}</span>`;
+      if (k.ru) inner += `<span class="ru">${k.ru}</span>`;
+    }
+    el.innerHTML = inner;
+
+    if (k.g) el.dataset.g = k.g;
+    // спец.клавиши с русской буквой (х, ъ, ж, э, б, ю) — тоже буквы для подсветки
+    if (k.g === 'special' && k.ru && /[а-яё]/i.test(k.ru)) el.dataset.letter = '1';
+    if (k.lang) el.dataset.lang = '1';
+    el.dataset.k = k.en || k.lbl || '';
+    el.dataset.i = i;
+    board.appendChild(el);
+  });
+
+  // индикаторы-лампочки над нампадом (загораются при Caps Lock / Num Lock)
+  const leds = document.createElement('div');
+  leds.className = 'leds';
+  leds.style.left   = `calc(15 * var(--u) + var(--pad) + var(--gap))`;
+  leds.style.top    = `calc(0 * var(--u) + var(--pad) + var(--gap))`;
+  leds.style.width  = `calc(1.75 * var(--u) - 2 * var(--gap))`;
+  leds.style.height = `calc(1 * var(--u) - 2 * var(--gap))`;
+  leds.innerHTML =
+    '<div class="led" data-led="Caps"><span class="led__dot"></span><span class="led__lbl">Caps</span></div>' +
+    '<div class="led" data-led="Num"><span class="led__dot"></span><span class="led__lbl">Num</span></div>';
+  board.appendChild(leds);
+
+  // ——— взаимодействие ———
+  const captionEl = document.getElementById('caption');
+  const tools = document.getElementById('tools');
+  const combos = document.getElementById('combos');
+  let activeGroup = null;
+
+  // популярные комбинации (Ctrl + …)
+  const COMBOS = {
+    copy:  { name: 'Ctrl + C', desc: 'Копировать выделенное.',            keys: ['Ctrl', 'C'] },
+    paste: { name: 'Ctrl + V', desc: 'Вставить скопированное.',           keys: ['Ctrl', 'V'] },
+    cut:   { name: 'Ctrl + X', desc: 'Вырезать выделенное.',              keys: ['Ctrl', 'X'] },
+    undo:  { name: 'Ctrl + Z', desc: 'Отменить последнее действие.',      keys: ['Ctrl', 'Z'] },
+    all:   { name: 'Ctrl + A', desc: 'Выделить весь текст.',              keys: ['Ctrl', 'A'] },
+    save:  { name: 'Ctrl + S', desc: 'Сохранить файл.',                   keys: ['Ctrl', 'S'] },
+  };
+  const DEFAULT_CAP = 'Нажми на клавишу мышкой или на настоящей клавиатуре — расскажу, что она делает.';
+
+  function clearHi() {
+    board.querySelectorAll('.key.hi').forEach(e => e.classList.remove('hi'));
+    board.classList.remove('show-special');
+  }
+
+  const KEYWORDS = /(Shift|Alt|Win|Ctrl|Fn|Пробел|Backspace|Enter|Tab|Esc|Delete|Caps)/g;
+  function setCaption(name, desc) {
+    const d = desc.replace(KEYWORDS, '<b>$1</b>');
+    const sep = desc.startsWith('+') ? ' ' : ' — ';
+    captionEl.innerHTML = `<span><b>${name}</b>${sep}${d}</span>`;
+  }
+
+  function clearPressed() {
+    document.querySelectorAll('.tool').forEach(t => t.setAttribute('aria-pressed', 'false'));
+  }
+
+  function highlightGroup(g) {
+    clearHi();
+    clearPressed();
+    if (g === 'reset' || activeGroup === g) {
+      activeGroup = null;
+      captionEl.textContent = DEFAULT_CAP;
+      return;
+    }
+    const btn = tools.querySelector(`.tool[data-g="${g}"]`);
+    if (btn) btn.setAttribute('aria-pressed', 'true');
+    activeGroup = g;
+    if (g === 'special') {
+      board.classList.add('show-special');
+    } else {
+      const sel = g === 'lang' ? '.key[data-lang]'
+                : g === 'letter' ? '.key[data-g="letter"], .key[data-letter]'
+                : `.key[data-g="${g}"]`;
+      board.querySelectorAll(sel).forEach(e => {
+        e.style.setProperty('--d', (keys[+e.dataset.i].x * 0.05) + 's');
+        e.classList.add('hi');
+      });
+    }
+    setCaption(GROUP[g].name, GROUP[g].desc);
+  }
+
+  function highlightCombo(id) {
+    clearHi();
+    clearPressed();
+    if (activeGroup === 'combo:' + id) { activeGroup = null; captionEl.textContent = DEFAULT_CAP; return; }
+    activeGroup = 'combo:' + id;
+    combos.querySelector(`.tool[data-combo="${id}"]`).setAttribute('aria-pressed', 'true');
+    const c = COMBOS[id];
+    c.keys.forEach(tok => board.querySelectorAll(`.key[data-k="${tok}"]`).forEach(e => {
+      e.style.setProperty('--d', (keys[+e.dataset.i].x * 0.05) + 's');
+      e.classList.add('hi');
+    }));
+    setCaption(c.name, c.desc);
+  }
+
+  tools.addEventListener('click', e => {
+    const t = e.target.closest('.tool');
+    if (!t) return;
+    highlightGroup(t.dataset.g);
+  });
+
+  combos.addEventListener('click', e => {
+    const t = e.target.closest('.tool');
+    if (!t) return;
+    highlightCombo(t.dataset.combo);
+  });
+
+  board.addEventListener('click', e => {
+    const el = e.target.closest('.key');
+    if (!el) return;
+    clearHi();
+    clearPressed();
+    activeGroup = null;
+    el.style.setProperty('--d', '0s');
+    el.classList.add('hi');
+    const k = keys[+el.dataset.i];
+    // Caps Lock / Num Lock — переключают свою лампочку-индикатор
+    if (el.dataset.k === 'Caps' || el.dataset.k === 'Num') {
+      leds.querySelector(`.led[data-led="${el.dataset.k}"]`).classList.toggle('on');
+    }
+    setCaption(k.name || k.lbl || '', k.desc || '');
+  });
+
+  // ——— настоящая клавиатура ———
+  // сопоставляем e.code события с экранной клавишей
+  function codeFor(k) {
+    const np = k.x >= 16.75;                 // зона нампада
+    if (k.g === 'space')     return 'Space';
+    if (k.g === 'backspace') return 'Backspace';
+    if (k.g === 'enter')     return np ? 'NumpadEnter' : 'Enter';
+    if (k.g === 'shift')     return k.x === 0 ? 'ShiftLeft' : 'ShiftRight';
+    if (k.g === 'letter' && /^[A-Za-z]$/.test(k.en)) return 'Key' + k.en.toUpperCase();
+    if (k.g === 'digit' && k.big) return 'Digit' + k.big;     // верхний ряд
+    if (k.g === 'digit' && np && k.lbl) return 'Numpad' + k.lbl; // нампад
+    const L = k.lbl;
+    if (L === 'Ctrl') return k.x === 0 ? 'ControlLeft' : 'ControlRight';
+    if (L === 'Alt')  return k.x < 8   ? 'AltLeft'     : 'AltRight';
+    if (L === '←')    return 'ArrowLeft';   // Backspace уже обработан выше по g
+    if (L === '.')    return np ? 'NumpadDecimal' : 'Period';
+    if (L === '/')    return np ? 'NumpadDivide'  : 'Slash';
+    const BY_LABEL = {
+      'Esc':'Escape', 'PrtSc':'PrintScreen', 'Del':'Delete',
+      'Home':'Home', 'End':'End', 'PgUp':'PageUp', 'PgDn':'PageDown',
+      'Tab':'Tab', 'Caps':'CapsLock', 'Num':'NumLock', 'Win':'MetaLeft',
+      'F1':'F1','F2':'F2','F3':'F3','F4':'F4','F5':'F5','F6':'F6',
+      'F7':'F7','F8':'F8','F9':'F9','F10':'F10','F11':'F11','F12':'F12',
+      'Ё':'Backquote', '-':'Minus', '=':'Equal', '\\':'Backslash',
+      '[':'BracketLeft', ']':'BracketRight', ';':'Semicolon', "'":'Quote',
+      ',':'Comma', '↑':'ArrowUp', '↓':'ArrowDown', '→':'ArrowRight',
+      '*':'NumpadMultiply', '−':'NumpadSubtract', '+':'NumpadAdd',
+    };
+    return BY_LABEL[L] || null;
+  }
+
+  const byCode = {};
+  board.querySelectorAll('.key').forEach(el => {
+    const c = codeFor(keys[+el.dataset.i]);
+    if (c && !byCode[c]) byCode[c] = el;
+  });
+  const pressed = new Set();
+  // клавиши, у которых нажатие прокручивает страницу — гасим только их
+  const SCROLLERS = new Set(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End']);
+
+  function syncLocks(e) {
+    leds.querySelector('.led[data-led="Caps"]').classList.toggle('on', e.getModifierState('CapsLock'));
+    leds.querySelector('.led[data-led="Num"]').classList.toggle('on', e.getModifierState('NumLock'));
+  }
+
+  window.addEventListener('keydown', e => {
+    syncLocks(e);
+    const el = byCode[e.code];
+    if (!el) return;
+    if (SCROLLERS.has(e.code) && !e.ctrlKey && !e.metaKey && !e.altKey) e.preventDefault();
+    if (e.repeat) return;
+    el.style.setProperty('--d', '0s');
+    el.classList.add('hi');
+    pressed.add(el);
+    const k = keys[+el.dataset.i];
+    setCaption(k.name || k.lbl || '', k.desc || '');
+  });
+
+  window.addEventListener('keyup', e => {
+    syncLocks(e);
+    const el = byCode[e.code];
+    if (el && pressed.has(el)) { el.classList.remove('hi'); pressed.delete(el); }
+  });
+})();
+</script>
+</body>
+</html>
