@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Интерактив — шаблон</title>
+<style>
+  :root {
+    --ctp-base:     #eff1f5;
+    --ctp-mantle:   #e6e9ef;
+    --ctp-crust:    #dce0e8;
+    --ctp-surface0: #ccd0da;
+    --ctp-surface1: #bcc0cc;
+
+    --grid:     rgba(30,102,245,.06);
+    --grid-big: rgba(30,102,245,.11);
+
+    --c-bg:        var(--ctp-crust);
+    --c-panel:     var(--ctp-base);
+    --c-card:      var(--ctp-mantle);
+    --c-border:    var(--ctp-surface0);
+    --c-fg:        #4c4f69;
+    --c-muted:     #6c6f85;
+    --c-blue:      #1e66f5;
+    --c-green:     #40a02b;
+    --c-orange:    #fe640b;
+    --c-red:       #d20f39;
+    --c-on-accent: #eff1f5;
+    --radius:      14px;
+    --mono:        "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+    --sans:        "Rubik", system-ui, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background-color: var(--ctp-mantle);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(var(--grid-big) 1.5px, transparent 1.5px),
+      linear-gradient(90deg, var(--grid-big) 1.5px, transparent 1.5px),
+      radial-gradient(1200px 600px at 70% -10%, var(--ctp-mantle) 0%, var(--c-bg) 55%);
+    background-size:
+      24px 24px, 24px 24px, 120px 120px, 120px 120px, cover;
+    color: var(--c-fg);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 24px 16px 48px;
+  }
+
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  .head { margin-bottom: 20px; }
+  .head__title { margin: 0 0 6px; font-size: 1.5rem; font-weight: 600; color: var(--c-blue); }
+  .head__sub { margin: 0; color: var(--c-muted); font-size: .92rem; }
+
+  .card {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="head">
+      <h1 class="head__title">Интерактив — шаблон</h1>
+      <p class="head__sub">Короткое пояснение, что показывает этот интерактив.</p>
+    </header>
+
+    <main class="card" id="app">
+      Содержимое интерактива.
+    </main>
+  </div>
+</body>
+</html>
