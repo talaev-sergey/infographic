@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Инфографики</title>
+<style>
+  :root {
+    --ctp-base:     #eff1f5;
+    --ctp-mantle:   #e6e9ef;
+    --ctp-crust:    #dce0e8;
+    --ctp-surface0: #ccd0da;
+    --ctp-surface1: #bcc0cc;
+
+    --grid:     rgba(30,102,245,.06);
+    --grid-big: rgba(30,102,245,.11);
+
+    --c-bg:        var(--ctp-crust);
+    --c-panel:     var(--ctp-base);
+    --c-card:      var(--ctp-mantle);
+    --c-border:    var(--ctp-surface0);
+    --c-fg:        #4c4f69;
+    --c-muted:     #6c6f85;
+    --c-blue:      #1e66f5;
+    --c-green:     #40a02b;
+    --c-orange:    #fe640b;
+    --c-red:       #d20f39;
+    --radius:      14px;
+    --sans:        "Rubik", system-ui, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: var(--sans); margin: 0; padding: 24px;
+    background-color: var(--ctp-mantle);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(var(--grid-big) 1.5px, transparent 1.5px),
+      linear-gradient(90deg, var(--grid-big) 1.5px, transparent 1.5px),
+      radial-gradient(1200px 600px at 70% -10%, var(--ctp-mantle) 0%, var(--c-bg) 55%);
+    background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px, cover;
+    color: var(--c-fg); min-height: 100vh; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 0 48px; }
+  h1 { text-align: center; color: var(--c-blue); font-weight: 600; }
+  .sub { text-align: center; color: var(--c-muted); margin-top: -10px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px; margin-top: 32px; }
+  .card-btn { display: block; background: var(--c-card); border: 1px solid var(--c-border);
+    border-radius: var(--radius); padding: 24px 20px; text-decoration: none; color: var(--c-fg);
+    transition: border-color .15s ease, transform .15s ease; }
+  .card-btn:hover { border-color: var(--c-blue); transform: translateY(-2px); }
+  .card-btn__title { display: block; font-size: 1.1rem; font-weight: 600; color: var(--c-blue); }
+  .card-btn__desc { display: block; margin-top: 8px; font-size: .88rem; color: var(--c-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Инфографики</h1>
+  <p class="sub">Интерактивные разборы для уроков — нажми карточку, чтобы открыть</p>
+  <div class="cards">
+    <a class="card-btn" href="Как%20компьютер%20видит%20буквы/symbols-demo.html">
+      <span class="card-btn__title">💻 Как компьютер видит буквы</span>
+      <span class="card-btn__desc">Символ → Unicode → биты → пиксели на экране</span>
+    </a>
+    <a class="card-btn" href="Клавиатура%20—%20интерактивная%20схема/keyboard.html">
+      <span class="card-btn__title">⌨️ Клавиатура</span>
+      <span class="card-btn__desc">Интерактивная схема полноразмерной клавиатуры</span>
+    </a>
+    <a class="card-btn" href="Git%20—%20жизненный%20цикл%20файла/trainer-1.html">
+      <span class="card-btn__title">📄 Git — жизненный цикл файла</span>
+      <span class="card-btn__desc">Тренажёр: init → add → commit</span>
+    </a>
+    <a class="card-btn" href="Git%20—%20ветки/trainer-4.html">
+      <span class="card-btn__title">🌿 Git — ветки</span>
+      <span class="card-btn__desc">Тренажёр: branch → switch → merge</span>
+    </a>
+  </div>
+</div>
+</body>
+</html>
